@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>مدير المهام اليومية</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #ffffff;
+        --card: #ffffff;
+        --text: #1f2430;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --accent: #5b4bdb;
+        --accent-2: #7c3aed;
+        --shadow: 0 10px 28px rgba(91, 75, 219, 0.09);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: 'Cairo', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      .top-nav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid var(--border);
+      }
+      .nav-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0.9rem 1.25rem;
+        display: flex;
+        gap: 0.65rem;
+      }
+      .tab {
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--muted);
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .tab:hover, .tab.active {
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        border-color: transparent;
+      }
+      main { max-width: 1200px; margin: 1.25rem auto 2rem; padding: 0 1.25rem; }
+      section { margin-bottom: 2rem; scroll-margin-top: 95px; }
+      .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+      h2 { margin: 0; font-size: 1.35rem; }
+      button, input {
+        font-family: inherit;
+      }
+      .btn {
+        border: 0;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: white;
+        padding: 0.55rem 0.9rem;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .btn.secondary { background: #f3f4f6; color: #1f2937; }
+      .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1rem;
+        box-shadow: var(--shadow);
+        background: var(--card);
+        animation: fadeIn 0.25s ease;
+      }
+      .card-top { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.7rem; }
+      .title-input, .task-input, .goal-input, .date-input {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.55rem 0.65rem;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      .title-input:focus, .task-input:focus, .goal-input:focus, .date-input:focus { border-color: var(--accent); }
+      ul { list-style: none; margin: 0; padding: 0; }
+      .goal-item, .task-item {
+        display: flex; align-items: center; gap: 0.45rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.45rem 0.6rem;
+        margin-bottom: 0.45rem;
+        animation: slideUp 0.2s ease;
+      }
+      .goal-text { flex: 1; }
+      .del {
+        border: 0;
+        background: transparent;
+        color: #b91c1c;
+        cursor: pointer;
+        font-size: 1.1rem;
+        line-height: 1;
+      }
+      .add-inline { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+      .daily-card { border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); padding: 1rem; }
+      .daily-head { display: flex; gap: 0.6rem; margin-bottom: 0.9rem; }
+      .task-text.done { text-decoration: line-through; color: #6b7280; }
+      @media (max-width: 1024px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+      @media (max-width: 720px) {
+        .grid { grid-template-columns: 1fr; }
+        .section-header { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
+        .daily-head { flex-direction: column; }
+      }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+  </head>
+  <body>
+    <nav class="top-nav">
+      <div class="nav-inner">
+        <a class="tab active" href="#monthly">الأهداف الشهرية</a>
+        <a class="tab" href="#weekly">الأهداف الأسبوعية</a>
+        <a class="tab" href="#daily">المهام اليومية</a>
+      </div>
+    </nav>
+    <main>
+      <section id="monthly">
+        <div class="section-header">
+          <h2>الأهداف الشهرية</h2>
+          <button class="btn" id="addMonthlyBox">إضافة صندوق شهري</button>
+        </div>
+        <div class="grid" id="monthlyGrid"></div>
+      </section>
+
+      <section id="weekly">
+        <div class="section-header">
+          <h2>الأهداف الأسبوعية</h2>
+          <button class="btn" id="addWeeklyBox">إضافة صندوق أسبوعي</button>
+        </div>
+        <div class="grid" id="weeklyGrid"></div>
+      </section>
+
+      <section id="daily">
+        <div class="section-header"><h2>المهام اليومية</h2></div>
+        <div class="daily-card">
+          <div class="daily-head">
+            <input type="date" id="selectedDate" class="date-input" />
+            <input type="text" id="taskInput" class="task-input" placeholder="أضف مهمة لليوم المحدد" />
+            <button class="btn" id="addTaskBtn">إضافة</button>
+          </div>
+          <ul id="dailyList"></ul>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const STORAGE_KEY = 'arabicTaskManagerDataV1';
+      const defaultData = { monthlyBoxes: [], weeklyBoxes: [], dailyTasks: {} };
+      let state = loadState();
+
+      const monthlyGrid = document.getElementById('monthlyGrid');
+      const weeklyGrid = document.getElementById('weeklyGrid');
+      const dateInput = document.getElementById('selectedDate');
+      const taskInput = document.getElementById('taskInput');
+      const dailyList = document.getElementById('dailyList');
+
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      function playScratchSound() {
+        const duration = 0.12;
+        const bufferSize = audioCtx.sampleRate * duration;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 1200;
+        const gain = audioCtx.createGain();
+        gain.gain.value = 0.18;
+        source.connect(filter).connect(gain).connect(audioCtx.destination);
+        source.start();
+      }
+
+      function loadState() {
+        try {
+          const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
+          return parsed ? { ...defaultData, ...parsed } : { ...defaultData };
+        } catch {
+          return { ...defaultData };
+        }
+      }
+      function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+      const uid = () => crypto.randomUUID();
+
+      function createGoalBox(type) {
+        const title = type === 'monthly' ? 'يناير 2025' : 'الأسبوع الأول - مايو';
+        const box = { id: uid(), title, goals: [] };
+        state[type === 'monthly' ? 'monthlyBoxes' : 'weeklyBoxes'].push(box);
+        saveState();
+        renderBoxes(type);
+      }
+      function deleteGoalBox(type, id) {
+        const key = type === 'monthly' ? 'monthlyBoxes' : 'weeklyBoxes';
+        state[key] = state[key].filter(b => b.id !== id);
+        saveState();
+        renderBoxes(type);
+      }
+      function addGoal(type, id, text) {
+        if (!text.trim()) return;
+        const key = type === 'monthly' ? 'monthlyBoxes' : 'weeklyBoxes';
+        const box = state[key].find(b => b.id === id);
+        box.goals.push({ id: uid(), text: text.trim() });
+        saveState();
+        renderBoxes(type);
+      }
+      function deleteGoal(type, boxId, goalId) {
+        const key = type === 'monthly' ? 'monthlyBoxes' : 'weeklyBoxes';
+        const box = state[key].find(b => b.id === boxId);
+        box.goals = box.goals.filter(g => g.id !== goalId);
+        saveState();
+        renderBoxes(type);
+      }
+      function renderBoxes(type) {
+        const key = type === 'monthly' ? 'monthlyBoxes' : 'weeklyBoxes';
+        const target = type === 'monthly' ? monthlyGrid : weeklyGrid;
+        target.innerHTML = '';
+        state[key].forEach(box => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.innerHTML = `
+            <div class="card-top">
+              <input class="title-input" value="${box.title}" />
+              <button class="del" title="حذف الصندوق">×</button>
+            </div>
+            <ul></ul>
+            <div class="add-inline">
+              <input class="goal-input" placeholder="أضف هدفًا" />
+              <button class="btn secondary">إضافة هدف</button>
+            </div>
+          `;
+          const titleInput = card.querySelector('.title-input');
+          titleInput.addEventListener('input', e => { box.title = e.target.value; saveState(); });
+          card.querySelector('.del').addEventListener('click', () => deleteGoalBox(type, box.id));
+
+          const goalsUl = card.querySelector('ul');
+          box.goals.forEach(goal => {
+            const li = document.createElement('li');
+            li.className = 'goal-item';
+            li.innerHTML = `<span class="goal-text">${goal.text}</span><button class="del">×</button>`;
+            li.querySelector('.del').addEventListener('click', () => deleteGoal(type, box.id, goal.id));
+            goalsUl.appendChild(li);
+          });
+
+          const input = card.querySelector('.goal-input');
+          const addBtn = card.querySelector('.btn.secondary');
+          addBtn.addEventListener('click', () => {
+            addGoal(type, box.id, input.value);
+            input.value = '';
+          });
+          input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+              addGoal(type, box.id, input.value);
+              input.value = '';
+            }
+          });
+          target.appendChild(card);
+        });
+      }
+
+      function getSelectedDate() { return dateInput.value; }
+      function addTask() {
+        const date = getSelectedDate();
+        const text = taskInput.value.trim();
+        if (!text) return;
+        if (!state.dailyTasks[date]) state.dailyTasks[date] = [];
+        state.dailyTasks[date].push({ id: uid(), text, done: false });
+        taskInput.value = '';
+        saveState();
+        renderDailyTasks();
+      }
+      function toggleTask(id) {
+        const list = state.dailyTasks[getSelectedDate()] || [];
+        const t = list.find(item => item.id === id);
+        t.done = !t.done;
+        if (t.done) playScratchSound();
+        saveState();
+        renderDailyTasks();
+      }
+      function renderDailyTasks() {
+        const date = getSelectedDate();
+        const list = state.dailyTasks[date] || [];
+        dailyList.innerHTML = '';
+        list.forEach(task => {
+          const li = document.createElement('li');
+          li.className = 'task-item';
+          li.innerHTML = `
+            <input type="checkbox" ${task.done ? 'checked' : ''}>
+            <span class="task-text ${task.done ? 'done' : ''}">${task.text}</span>
+          `;
+          li.querySelector('input').addEventListener('change', () => toggleTask(task.id));
+          li.querySelector('.task-text').addEventListener('click', () => toggleTask(task.id));
+          dailyList.appendChild(li);
+        });
+      }
+
+      document.getElementById('addMonthlyBox').addEventListener('click', () => createGoalBox('monthly'));
+      document.getElementById('addWeeklyBox').addEventListener('click', () => createGoalBox('weekly'));
+      document.getElementById('addTaskBtn').addEventListener('click', addTask);
+      taskInput.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+      dateInput.addEventListener('change', renderDailyTasks);
+
+      dateInput.value = new Date().toISOString().slice(0, 10);
+      renderBoxes('monthly');
+      renderBoxes('weekly');
+      renderDailyTasks();
+
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+        });
+      });
+    </script>
+  </body>
+</html>
